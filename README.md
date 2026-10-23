@@ -1,6 +1,6 @@
 # Papeles
 
-Browser-only PDF tools: sign, merge, split, and convert between images and PDF.
+Browser-only PDF tools: sign, edit text, merge, split, OCR, and convert between images and PDF.
 
 Open a PDF, add a signature, initials, date or text, and download the signed copy. Signatures can be drawn, typed in a handwriting font, or uploaded as an image with automatic background removal. Saved signatures are kept in the browser for next time.
 
@@ -21,6 +21,8 @@ There is no build step and nothing to install. Libraries load from cdnjs:
 
 - [pdf.js 3.11.174](https://mozilla.github.io/pdf.js/) renders the pages
 - [pdf-lib 1.17.1](https://pdf-lib.js.org/) writes the signed PDF
+- [JSZip 3.10.1](https://stuk.github.io/jszip/) bundles multi-file downloads
+- [Tesseract.js 5.1.1](https://tesseract.projectnaptha.com/) runs OCR. It loads only when OCR is first used and downloads its engine and language data (about 5 to 15 MB) from jsDelivr.
 
 Fonts load from Google Fonts.
 
@@ -64,4 +66,6 @@ Check with the platform team before enabling Pages if your organization's policy
 
 - Supported: Chrome, Edge, Safari and Firefox (current versions), desktop and mobile.
 - Password-protected PDFs can't be opened. Remove the password first.
+- **OCR** works on the GitHub Pages site but not on the Claude preview link, which blocks the engine download. Results depend on scan quality, so check recognised text against the original.
+- **Edit existing text** covers the old text with a patch matching the background and writes the new text in a standard font (Helvetica, Times or Courier). The old text is hidden, not deleted: it can still be found by searching or copying, so don't use it to remove confidential information. Scanned PDFs have no editable text.
 - Typed date and text fields use Helvetica in the PDF. Characters outside the standard Latin set are embedded as an image instead.

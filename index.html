@@ -96,6 +96,10 @@ button, input, select { font: inherit; color: inherit; }
 .tool:hover { border-color: var(--accent); }
 .tool[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
 .tool svg { width: 20px; height: 20px; color: var(--accent); }
+.tool.wide { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+.tbox { position: absolute; padding: 0; border: 0; background: transparent; outline: 1px dashed rgb(181 42 45 / .45); outline-offset: 1px; border-radius: 2px; cursor: text; }
+.tbox:hover, .tbox:focus-visible { background: rgb(181 42 45 / .12); outline: 1.5px solid #b52a2d; }
+.cover { position: absolute; pointer-events: none; }
 .tool span { font-weight: 600; font-size: 14px; }
 
 .library { display: grid; gap: 8px; }
@@ -271,6 +275,12 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   background: var(--raised); color: transparent; box-shadow: 0 0 0 1.5px var(--line); font-size: 13px; font-weight: 900;
 }
 .pg[aria-pressed="true"] .tick { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.ocr-panel { display: grid; gap: 12px; }
+.ocr-panel .note { margin: 0; }
+.ocr-text {
+  width: 100%; min-height: 340px; resize: vertical; padding: 14px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--raised); color: var(--ink); font: 13.5px/1.55 var(--font-mono);
+}
 @media (max-width: 760px) {
   .ws { overflow: visible; }
   .ws-actions { width: 100%; }
@@ -321,6 +331,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     <button class="mode" type="button" role="tab" data-view="split" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M3 13h18" stroke-dasharray="2 2.5"/></svg>Split</button>
     <button class="mode" type="button" role="tab" data-view="img2pdf" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>Images to PDF</button>
     <button class="mode" type="button" role="tab" data-view="pdf2img" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m8 17 3-3 2 2 3-3"/></svg>PDF to images</button>
+    <button class="mode" type="button" role="tab" data-view="ocr" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg>OCR</button>
   </nav>
 
   <section class="ws" id="ws" hidden>
@@ -354,6 +365,10 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
           <button class="tool" type="button" id="toolText">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>
             <span>Text</span>
+          </button>
+          <button class="tool wide" type="button" id="toolEdit" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h10v2M9 5v12M7 17h4"/><path d="m14.5 19.5 1-3.5 4.5-4.5 2.5 2.5-4.5 4.5z"/></svg>
+            <span>Edit existing text</span>
           </button>
         </div>
         <p class="note" style="margin-top:10px">Tip: paste an image or text with <strong>Ctrl/Cmd+V</strong> to place it. Copy a placed item to duplicate it.</p>
@@ -523,7 +538,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
 
   /* ---------- rendering ---------- */
   async function openPdf(bytes, name) {
-    state.fields = []; state.pages = []; state.selected = null; disarm();
+    state.fields = []; state.pages = []; state.selected = null; if (editing) setEditing(false); disarm();
     pagesEl.innerHTML = '<div class="loading">Opening ' + name.replace(/[<>&]/g, '') + '</div>';
     let doc;
     try {
@@ -565,6 +580,8 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
 
   /* ---------- placing ---------- */
   function arm(item, label) {
+    if (editing) setEditing(false);
+    $('#chipCancel').textContent = 'Cancel';
     state.armed = item;
     document.body.classList.add('placing');
     $('#chipText').textContent = 'Click on a page to place the ' + label;
@@ -605,7 +622,8 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
 
   function addField(f) { state.fields.push(f); mountField(f); select(f); }
   function removeField(f) {
-    state.fields = state.fields.filter((x) => x !== f); f.el.remove(); if (state.selected === f) state.selected = null;
+    state.fields = state.fields.filter((x) => x !== f); f.el.remove(); if (f.coverEl) f.coverEl.remove(); if (state.selected === f) state.selected = null;
+    if (f.srcKey && editing) renderTextBoxes(state.pages[f.page]);
   }
   function select(f) {
     if (state.selected && state.selected.el) state.selected.el.classList.remove('selected');
@@ -626,10 +644,18 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     if (f.type === 'image') {
       const img = new Image(); img.src = f.src; img.alt = 'Signature'; img.draggable = false; el.append(img);
     } else {
+      if (f.cover) {
+        const c = document.createElement('div'); c.className = 'cover'; f.coverEl = c;
+        Object.assign(c.style, { left: f.cover.x * 100 + '%', top: f.cover.y * 100 + '%', width: f.cover.w * 100 + '%', height: f.cover.h * 100 + '%', background: f.cover.color });
+        state.pages[f.page].overlay.append(c);
+      }
       const t = document.createElement('span'); t.className = 'txt'; t.textContent = f.text;
+      if (f.font) t.style.fontFamily = FONT_CSS[f.font];
+      if (f.bold) t.style.fontWeight = '700';
+      if (f.color) t.style.color = f.color;
       t.setAttribute('contenteditable', 'true'); t.spellcheck = false;
       t.addEventListener('input', () => { f.text = t.innerText.replace(/\n$/, ''); });
-      t.addEventListener('blur', () => { if (!f.text.trim()) removeField(f); });
+      t.addEventListener('blur', () => { if (!f.text.trim() && !f.cover) removeField(f); }); // an emptied edit still hides the old text
       el.append(t);
     }
     const handle = document.createElement('div'); handle.className = 'handle'; handle.title = 'Resize';
@@ -673,11 +699,11 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
 
   document.addEventListener('keydown', (e) => {
     if ($('#dlg').open || view !== 'sign') return;
-    if (e.key === 'Escape') { disarm(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+    if (e.key === 'Escape') { if (editing && !document.activeElement?.isContentEditable) setEditing(false); disarm(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
     const editing = document.activeElement && document.activeElement.isContentEditable;
     if ((e.key === 'Delete' || e.key === 'Backspace') && state.selected && !editing) { e.preventDefault(); removeField(state.selected); }
   });
-  $('#chipCancel').addEventListener('click', disarm);
+  $('#chipCancel').addEventListener('click', () => { if (editing) setEditing(false); else disarm(); });
 
   /* ---------- library ---------- */
   function renderLibrary() {
@@ -905,7 +931,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     if (!file) return;
     if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { toast('That file is not a PDF.'); return; }
     const bytes = new Uint8Array(await file.arrayBuffer());
-    if (await openPdf(bytes, file.name)) { toast('Opened ' + file.name); if (view === 'split' || view === 'pdf2img') renderView(); }
+    if (await openPdf(bytes, file.name)) { toast('Opened ' + file.name); if (view !== 'sign') renderView(); }
   }
   $('#fileInput').addEventListener('change', (e) => { openFile(e.target.files[0]); e.target.value = ''; });
   let dragDepth = 0;
@@ -928,6 +954,9 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
     const pdf = await PDFDocument.load(state.bytes, { ignoreEncryption: true });
     const font = await pdf.embedFont(StandardFonts.Helvetica);
+    const FONTS = { sans: ['Helvetica', 'HelveticaBold'], serif: ['TimesRoman', 'TimesRomanBold'], mono: ['Courier', 'CourierBold'] }, fontCache = {};
+    const fontFor = async (f) => { const k = FONTS[f.font || 'sans'][f.bold ? 1 : 0]; return fontCache[k] || (fontCache[k] = await pdf.embedFont(StandardFonts[k])); };
+    const toRgb = (h) => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255);
     const pages = pdf.getPages(); const cache = new Map();
     for (const f of state.fields) {
       const P = state.pages[f.page], vp = P.vp1, page = pages[f.page];
@@ -939,13 +968,18 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
         if (!img) { img = await pdf.embedPng(dataUrlToBytes(f.src)); cache.set(f.src, img); }
         page.drawImage(img, { x, y, width: w, height: h, rotate });
       } else {
+        if (f.cover) {
+          const c = f.cover, [cx, cy] = vp.convertToPdfPoint(c.x * W, (c.y + c.h) * H);
+          page.drawRectangle({ x: cx, y: cy, width: c.w * W, height: c.h * H, color: toRgb(c.color), rotate });
+        }
         const text = (f.text || '').replace(/\s+$/, ''); if (!text) continue;
+        const tfont = await fontFor(f), tcolor = f.color ? toRgb(f.color) : rgb(0.08, 0.09, 0.12);
         const size = f.fs * H; const lines = text.split('\n');
-        let encodable = true; try { font.encodeText(text.replace(/\n/g, ' ')); } catch { encodable = false; }
+        let encodable = true; try { tfont.encodeText(text.replace(/\n/g, ' ')); } catch { encodable = false; }
         if (encodable) {
           lines.forEach((line, i) => {
             const [x, y] = vp.convertToPdfPoint(f.x * W, f.y * H + size * (1.0 + 1.2 * i));
-            page.drawText(line, { x, y, size, font, color: rgb(0.08, 0.09, 0.12), rotate });
+            page.drawText(line, { x, y, size, font: tfont, color: tcolor, rotate });
           });
         } else {
           const t = textToPng(text, size); const img = await pdf.embedPng(dataUrlToBytes(t.url));
@@ -1006,6 +1040,87 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     await saveFile(await zip.generateAsync({ type: 'blob' }), filename);
   }
 
+  /* ---------- edit existing text ---------- */
+  let editing = false;
+  const FONT_CSS = { sans: 'Helvetica, Arial, sans-serif', serif: '"Times New Roman", Times, serif', mono: '"Courier New", Courier, monospace' };
+  const hex = (r, g, b) => '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+  // Paper colour = median of the pixels just outside the box; ink colour = darkest pixel inside it.
+  function sampleColors(p, box) {
+    const cv = p.wrap.querySelector('canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+    const sx = cv.width / p.vp1.width, sy = cv.height / p.vp1.height;
+    const px = (x, y) => ctx.getImageData(clamp(Math.round(x * sx), 0, cv.width - 1), clamp(Math.round(y * sy), 0, cv.height - 1), 1, 1).data;
+    const ring = [];
+    for (let k = 0; k <= 6; k++) {
+      const x = box.l + (box.w * k) / 6;
+      ring.push(px(x, box.t - 1.5), px(x, box.t + box.h + 1.5));
+    }
+    ring.push(px(box.l - 1.5, box.t + box.h / 2), px(box.l + box.w + 1.5, box.t + box.h / 2));
+    const med = (ch) => ring.map((d) => d[ch]).sort((a, b) => a - b)[ring.length >> 1];
+    const bg = [med(0), med(1), med(2)];
+    const x0 = Math.round(box.l * sx), y0 = Math.round(box.t * sy), w = Math.max(1, Math.round(box.w * sx)), h = Math.max(1, Math.round(box.h * sy));
+    const d = ctx.getImageData(clamp(x0, 0, cv.width - 1), clamp(y0, 0, cv.height - 1), Math.min(w, cv.width - x0), Math.min(h, cv.height - y0)).data;
+    let best = 999, ink = [20, 23, 31];
+    for (let i = 0; i < d.length; i += 4) { const L = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114; if (L < best) { best = L; ink = [d[i], d[i + 1], d[i + 2]]; } }
+    return { bg: hex(...bg), ink: hex(...ink) };
+  }
+  async function pageTextItems(p) {
+    if (p.textItems) return p.textItems;
+    const page = await state.pdfDoc.getPage(p.index + 1);
+    const tc = await page.getTextContent(); const out = [];
+    tc.items.forEach((it, k) => {
+      if (!it.str || !it.str.trim()) return;
+      const tx = pdfjsLib.Util.transform(p.vp1.transform, it.transform);
+      if (Math.abs(tx[1]) > 0.01 || Math.abs(tx[2]) > 0.01) return; // rotated text is not editable here
+      const size = Math.hypot(tx[2], tx[3]); if (size < 2) return;
+      const style = tc.styles[it.fontName] || {}; let name = '';
+      try { name = page.commonObjs.get(it.fontName).name || ''; } catch { /* font name unknown */ }
+      const fam = /mono|courier/i.test(style.fontFamily + name) ? 'mono' : /serif/i.test(style.fontFamily) && !/sans/i.test(style.fontFamily) || /times|georgia|garamond|roman/i.test(name) ? 'serif' : 'sans';
+      out.push({ key: p.index + ':' + k, str: it.str, size, left: tx[4], base: tx[5], width: it.width * p.vp1.scale, font: fam, bold: /bold|black|heavy|semibold/i.test(name) });
+    });
+    return (p.textItems = out);
+  }
+  async function setEditing(on) {
+    editing = on; disarm();
+    document.body.classList.toggle('editing-text', on);
+    $('#toolEdit').setAttribute('aria-pressed', on ? 'true' : 'false');
+    document.querySelectorAll('.tbox').forEach((b) => b.remove());
+    if (!on) { $('#chip').hidden = true; return; }
+    $('#chipText').textContent = 'Click any text on the page to edit it';
+    $('#chipCancel').textContent = 'Done'; $('#chip').hidden = false;
+    let found = 0;
+    for (const p of state.pages) { found += (await pageTextItems(p)).length; if (editing) renderTextBoxes(p); }
+    if (!found) toast('No editable text found. This PDF may be a scan, which only contains images of text.');
+  }
+  function renderTextBoxes(p) {
+    p.overlay.querySelectorAll('.tbox').forEach((b) => b.remove());
+    const used = new Set(state.fields.filter((f) => f.srcKey).map((f) => f.srcKey));
+    const W = p.vp1.width, H = p.vp1.height;
+    for (const it of p.textItems || []) {
+      if (used.has(it.key)) continue;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'tbox'; b.title = 'Edit this text';
+      b.style.left = (it.left / W) * 100 + '%'; b.style.top = ((it.base - it.size * 0.85) / H) * 100 + '%';
+      b.style.width = (it.width / W) * 100 + '%'; b.style.height = ((it.size * 1.1) / H) * 100 + '%';
+      b.addEventListener('pointerdown', (e) => e.stopPropagation());
+      b.addEventListener('click', (e) => { e.stopPropagation(); startEdit(p, it); });
+      p.overlay.append(b);
+    }
+  }
+  function startEdit(p, it) {
+    const W = p.vp1.width, H = p.vp1.height, pad = Math.max(0.6, it.size * 0.08);
+    const box = { l: it.left - pad, t: it.base - it.size * 0.9 - pad, w: it.width + pad * 2, h: it.size * 1.15 + pad * 2 };
+    const { bg, ink } = sampleColors(p, box);
+    const f = {
+      id: ++uid, page: p.index, type: 'text', text: it.str, fs: it.size / H, x: it.left / W, y: (it.base - it.size) / H,
+      font: it.font, bold: it.bold, color: ink, srcKey: it.key,
+      cover: { x: box.l / W, y: box.t / H, w: box.w / W, h: box.h / H, color: bg },
+    };
+    addField(f); renderTextBoxes(p); focusText(f, false);
+  }
+  $('#toolEdit').addEventListener('click', () => {
+    if (!state.pdfDoc) { toast('Open a PDF first.'); return; }
+    setEditing(!editing);
+  });
+
   /* ---------- tool views ---------- */
   let view = 'sign', dragFrom = null, busyBtn = null;
   const ws = {
@@ -1017,6 +1132,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     split: ['Split PDF', 'Pick pages to extract, or split every page into its own file.'],
     img2pdf: ['Images to PDF', 'Turn photos and scans into a PDF, one image per page. Drag the cards to set the order.'],
     pdf2img: ['PDF to images', 'Save pages as PNG or JPG images.'],
+    ocr: ['OCR', 'Recognise the text in scans and photos of documents.'],
   };
   const isPdf = (f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
   const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
@@ -1032,7 +1148,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
         const vp = page.getViewport({ scale: 360 / Math.max(v1.width, v1.height) });
         const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
         const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
-        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        await page.render({ canvasContext: ctx, viewport: vp, intent: 'print' }).promise; // print intent keeps rendering while the tab is in the background
         return (entry.url = cv.toDataURL('image/jpeg', 0.82));
       })();
       c[i] = entry;
@@ -1046,7 +1162,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     $('#signView').hidden = v !== 'sign'; $('#ws').hidden = v === 'sign';
     $('#downloadBtn').hidden = v !== 'sign';
     $('#openBtn').hidden = v === 'merge' || v === 'img2pdf';
-    disarm();
+    if (editing) setEditing(false); disarm();
     try { history.replaceState(null, '', '#' + v); } catch { /* address bar is optional */ }
     if (v !== 'sign') renderView();
   }
@@ -1077,7 +1193,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     const [title, sub] = VIEW_INFO[view];
     $('#wsTitle').textContent = title; $('#wsSub').textContent = sub;
     $('#wsActions').innerHTML = ''; $('#wsBody').innerHTML = '';
-    if (view === 'merge' || view === 'img2pdf') renderListView(); else renderPageView();
+    if (view === 'merge' || view === 'img2pdf') renderListView(); else if (view === 'ocr') renderOcrView(); else renderPageView();
   }
 
   /* Merge and Images to PDF: reorderable file cards */
@@ -1148,7 +1264,12 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     if (!files.length) return false;
     if (view === 'merge') { const ok = files.filter(isPdf); ok.length ? addMerge(ok) : toast('Only PDF files can be merged.'); return true; }
     if (view === 'img2pdf') { const ok = files.filter((f) => f.type.startsWith('image/')); ok.length ? addImages(ok) : toast('Only image files can be added here.'); return true; }
-    const pdf = files.find(isPdf); pdf ? openFile(pdf) : toast('Choose a PDF file.'); return true;
+    const pdf = files.find(isPdf);
+    if (!pdf && view === 'ocr') { // photos of documents: turn them into a PDF first
+      const imgs = files.filter((f) => f.type.startsWith('image/'));
+      if (imgs.length) { imagesPdfBytes(imgs, 'fit', 0).then((b) => openPdf(new Uint8Array(b), imgs.length === 1 ? imgs[0].name.replace(/\.\w+$/, '') + '.pdf' : 'scan.pdf')).then(renderView); return true; }
+    }
+    pdf ? openFile(pdf) : toast('Choose a PDF file.'); return true;
   }
 
   /* Split and PDF to images: selectable page grid */
@@ -1219,10 +1340,10 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     }
     await saveFile(new Blob([await out.save()], { type: 'application/pdf' }), 'merged.pdf');
   }
-  async function doImg2pdf() {
+  async function imagesPdfBytes(files, size, marginIn) {
     const { PDFDocument } = PDFLib; const out = await PDFDocument.create();
-    const size = ws.img.size, margin = size === 'fit' ? 0 : +ws.img.margin;
-    for (const { file } of ws.img2pdf) {
+    const margin = size === 'fit' ? 0 : +marginIn;
+    for (const file of files) {
       const bytes = new Uint8Array(await file.arrayBuffer()); let img;
       if (file.type === 'image/jpeg') img = await out.embedJpg(bytes);
       else if (file.type === 'image/png') img = await out.embedPng(bytes);
@@ -1236,8 +1357,12 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
       const s = Math.min((pw - 2 * margin) / iw, (ph - 2 * margin) / ih, size === 'fit' ? 1 : Infinity);
       out.addPage([pw, ph]).drawImage(img, { x: (pw - iw * s) / 2, y: (ph - ih * s) / 2, width: iw * s, height: ih * s });
     }
+    return out.save();
+  }
+  async function doImg2pdf() {
+    const bytes = await imagesPdfBytes(ws.img2pdf.map((i) => i.file), ws.img.size, ws.img.margin);
     const one = ws.img2pdf.length === 1;
-    await saveFile(new Blob([await out.save()], { type: 'application/pdf' }), one ? ws.img2pdf[0].file.name.replace(/\.\w+$/, '') + '.pdf' : 'images.pdf');
+    await saveFile(new Blob([bytes], { type: 'application/pdf' }), one ? ws.img2pdf[0].file.name.replace(/\.\w+$/, '') + '.pdf' : 'images.pdf');
   }
   async function doExtract() {
     const { PDFDocument } = PDFLib; const src = await PDFDocument.load(state.bytes, { ignoreEncryption: true });
@@ -1264,11 +1389,108 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
       const page = await doc.getPage(i + 1); const vp = page.getViewport({ scale });
       const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      await page.render({ canvasContext: ctx, viewport: vp, intent: 'print' }).promise; // print intent keeps rendering while the tab is in the background
       entries.push([baseName() + '-page-' + String(i + 1).padStart(String(n).length, '0') + '.' + fmt, await new Promise((r) => c.toBlob(r, mime, 0.92))]);
     }
     if (entries.length === 1) return saveFile(entries[0][1], entries[0][0]);
     await zipAndSave(entries, baseName() + '-' + fmt + '.zip');
+  }
+
+  /* OCR: recognise text in scans with Tesseract.js (loaded on first use) */
+  const inPreview = !!(window.claude && window.claude.use);
+  let tessP = null;
+  function loadTesseract() {
+    if (window.Tesseract) return Promise.resolve(window.Tesseract);
+    return tessP || (tessP = new Promise((res, rej) => {
+      const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+      s.onload = () => res(window.Tesseract);
+      s.onerror = () => { tessP = null; rej(new Error('The OCR engine could not load. Check your internet connection and try again.')); };
+      document.head.append(s);
+    }));
+  }
+  ws.ocr = { lang: 'eng', doc: null, text: null, result: null };
+  function renderOcrView() {
+    const acts = $('#wsActions'), body = $('#wsBody'), o = ws.ocr;
+    if (!state.pdfDoc) {
+      body.append(dropzone('Drop a scanned PDF or photos of a document', 'Or paste them with Ctrl/Cmd+V.', () => pickFiles('application/pdf,.pdf,image/png,image/jpeg,image/webp'), 'Choose files'));
+      return;
+    }
+    if (o.doc !== state.pdfDoc) { o.doc = state.pdfDoc; o.text = null; o.result = null; }
+    $('#wsSub').textContent = state.name + ', ' + plural(state.pdfDoc.numPages, 'page') + '. Recognise the text in scans and photos of documents.';
+    acts.append(selectEl('wsLang', 'Language', [['eng', 'English'], ['tgl', 'Filipino'], ['eng+tgl', 'English and Filipino'], ['spa', 'Spanish']], o.lang, (v) => { o.lang = v; }));
+    acts.append(btn('Extract text', '', (b) => runTool(b, () => doOcr(false))));
+    acts.append(btn('Make searchable PDF', 'primary', (b) => runTool(b, () => doOcr(true))));
+    const panel = el('div', 'ocr-panel');
+    panel.append(el('p', 'note', '')); panel.lastChild.id = 'ocrStatus';
+    if (o.text == null) {
+      panel.lastChild.textContent = inPreview
+        ? 'OCR needs to download its engine, which this Claude preview blocks. Use the GitHub Pages version of Papeles for OCR.'
+        : 'Recognition runs in your browser and your file is not uploaded. The first run downloads the OCR engine and language data (about 5 to 15 MB).';
+    } else {
+      panel.lastChild.textContent = o.text.trim() ? 'Recognised text. Check it against the original, since OCR can misread blurry or small print.' : 'No text was recognised. Try a clearer scan or another language.';
+      const ta = el('textarea', 'ocr-text'); ta.id = 'ocrText'; ta.readOnly = true; ta.value = o.text; ta.setAttribute('aria-label', 'Recognised text');
+      const row = el('div', 'row');
+      row.append(btn('Copy text', '', async () => {
+        try { await navigator.clipboard.writeText(o.text); toast('Copied to the clipboard.'); }
+        catch { ta.focus(); ta.select(); toast('Press Ctrl/Cmd+C to copy the selected text.'); }
+      }));
+      row.append(btn('Download .txt', '', () => saveFile(new Blob([o.text], { type: 'text/plain' }), baseName() + '.txt')));
+      if (o.result) row.append(btn('Edit this text in Sign', 'ghost', async () => {
+        const bytes = o.result; await openPdf(bytes, baseName() + '-searchable.pdf'); setView('sign'); setEditing(true);
+      }));
+      panel.append(ta, row);
+    }
+    body.append(panel);
+  }
+  async function doOcr(makePdf) {
+    const status = (t) => { const s = $('#ocrStatus'); if (s) s.textContent = t; if (busyBtn) busyBtn.textContent = t; };
+    status('Loading OCR engine...');
+    const T = await loadTesseract(); let worker;
+    try {
+      worker = await T.createWorker(ws.ocr.lang, 1, {
+        logger: (m) => { if (m.status && /loading|initializ/.test(m.status) && m.progress != null) status('Loading OCR engine ' + Math.round(m.progress * 100) + '%'); },
+      });
+    } catch (e) {
+      console.error(e);
+      throw new Error(inPreview ? 'OCR cannot run in this preview because it blocks the engine download. Use the GitHub Pages version.' : 'The OCR engine could not start. Check your internet connection and try again.');
+    }
+    const doc = state.pdfDoc, n = doc.numPages, pages = [];
+    ws.ocr.doc = doc; // results belong to this document even if the view re-renders meanwhile
+    try {
+      for (let i = 0; i < n; i++) {
+        status('Reading page ' + (i + 1) + ' of ' + n + '...');
+        const page = await doc.getPage(i + 1), v1 = page.getViewport({ scale: 1 });
+        const scale = Math.min(2.5, 2600 / Math.max(v1.width, v1.height)), vp = page.getViewport({ scale });
+        const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        await page.render({ canvasContext: ctx, viewport: vp, intent: 'print' }).promise; // print intent keeps rendering while the tab is in the background
+        const { data } = await worker.recognize(c);
+        pages.push({ text: (data.text || '').trim(), words: data.words || [], scale });
+      }
+    } finally { await worker.terminate(); }
+    if (state.pdfDoc !== doc) return; // another file was opened while reading
+    ws.ocr.text = pages.map((p, i) => (n > 1 ? 'Page ' + (i + 1) + '\n\n' : '') + p.text).join('\n\n');
+    if (makePdf) {
+      status('Building searchable PDF...');
+      const { PDFDocument, StandardFonts, degrees } = PDFLib;
+      const pdf = await PDFDocument.load(state.bytes, { ignoreEncryption: true });
+      const font = await pdf.embedFont(StandardFonts.Helvetica), pp = pdf.getPages();
+      pages.forEach((r, i) => {
+        const P = state.pages[i], vp = P.vp1, rotate = degrees(P.rotate);
+        for (const w of r.words) {
+          const t = (w.text || '').trim(); if (!t || w.confidence < 30) continue;
+          const x0 = w.bbox.x0 / r.scale, x1 = w.bbox.x1 / r.scale, y0 = w.bbox.y0 / r.scale, y1 = w.bbox.y1 / r.scale;
+          let w1; try { w1 = font.widthOfTextAtSize(t, 1); } catch { continue; } // skip characters Helvetica cannot encode
+          if (!w1) continue;
+          const size = Math.min((x1 - x0) / w1, (y1 - y0) * 1.5); if (size < 1) continue;
+          const [x, y] = vp.convertToPdfPoint(x0, y1 - (y1 - y0) * 0.15);
+          pp[i].drawText(t, { x, y, size, font, opacity: 0, rotate }); // invisible, but searchable and selectable
+        }
+      });
+      ws.ocr.result = await pdf.save();
+      await saveFile(new Blob([ws.ocr.result], { type: 'application/pdf' }), baseName() + '-searchable.pdf');
+    }
+    renderView();
   }
 
   // Dropping files anywhere on a tool screen
@@ -1287,14 +1509,15 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   }
   const isTyping = (el) => el && (el.isContentEditable || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT');
   function duplicateField(src) {
-    const f = { ...src, id: ++uid, el: null, x: clamp(src.x + 0.02, 0, 0.95), y: clamp(src.y + 0.02, 0, 0.95) };
+    const { cover, coverEl, srcKey, ...rest } = src;
+    const f = { ...rest, id: ++uid, el: null, x: clamp(src.x + 0.02, 0, 0.95), y: clamp(src.y + 0.02, 0, 0.95) };
     addField(f); toast('Pasted a copy. Drag it into place.');
   }
   document.addEventListener('copy', (e) => {
     if ($('#dlg').open || view !== 'sign' || isTyping(document.activeElement) || getSelection().toString()) return;
     const f = state.selected; if (!f) return;
     e.preventDefault();
-    const { el, ...data } = f; state.clip = data;
+    const { el, coverEl, ...data } = f; state.clip = data;
     e.clipboardData.setData('text/plain', f.type === 'text' ? f.text : CLIP_MARK);
     toast('Copied. Press ' + (navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl') + '+V to paste a copy.');
   });
