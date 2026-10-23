@@ -1,6 +1,6 @@
 # Papeles
 
-Browser-only PDF tools: sign, edit text, merge, split, OCR, and convert between images and PDF.
+Browser-only PDF tools: sign, edit text, add fillable form fields, merge, split, OCR, and convert between images and PDF.
 
 Open a PDF, add a signature, initials, date or text, and download the signed copy. Signatures can be drawn, typed in a handwriting font, or uploaded as an image with automatic background removal. Saved signatures are kept in the browser for next time.
 
@@ -66,6 +66,9 @@ Check with the platform team before enabling Pages if your organization's policy
 
 - Supported: Chrome, Edge, Safari and Firefox (current versions), desktop and mobile.
 - Password-protected PDFs can't be opened. Remove the password first.
+- **Search** (top bar, or Ctrl/Cmd+K) finds any tool by name, for example "jpg" or "combine", and finds text in the open PDF with highlighted matches. Scanned pages need OCR before their text can be found.
+- **Checkbox** and **Fill-in field** are saved as real PDF form fields, so the downloaded file can be filled in with Acrobat, Preview or a browser.
+- **Ctrl/Cmd+Z** undoes and **Ctrl/Cmd+Shift+Z** or **Ctrl+Y** redoes changes on the Sign tab.
 - **OCR** works on the GitHub Pages site but not on the Claude preview link, which blocks the engine download. Results depend on scan quality, so check recognised text against the original.
-- **Edit existing text** covers the old text with a patch matching the background and writes the new text in a standard font (Helvetica, Times or Courier). The old text is hidden, not deleted: it can still be found by searching or copying, so don't use it to remove confidential information. Scanned PDFs have no editable text.
+- **Edit existing text** covers the old text with a patch matching the background and writes the new text at the same size with the PDF's own embedded font. Embedded fonts often contain only the letters the document already uses; if you type a letter that is missing, that line falls back to a similar standard font (Helvetica, Times or Courier) and the app tells you. The old text is hidden, not deleted: it can still be found by searching or copying, so don't use it to remove confidential information. Scanned PDFs have no editable text.
 - Typed date and text fields use Helvetica in the PDF. Characters outside the standard Latin set are embedded as an image instead.

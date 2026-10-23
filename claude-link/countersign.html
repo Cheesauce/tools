@@ -73,6 +73,29 @@ button, input, select { font: inherit; color: inherit; }
 .btn.ghost { background: transparent; }
 .btn[disabled] { opacity: .5; cursor: not-allowed; }
 .btn svg { width: 16px; height: 16px; flex: none; }
+.search { position: relative; flex: 1 1 260px; max-width: 460px; min-width: 0; }
+.search > svg { position: absolute; left: 11px; top: 50%; translate: 0 -50%; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+.search .input { height: 38px; padding-left: 34px; padding-right: 58px; }
+.search kbd { position: absolute; right: 8px; top: 50%; translate: 0 -50%; padding: 2px 6px; border: 1px solid var(--line); border-radius: 5px; font: 600 11px var(--font-body); color: var(--muted); pointer-events: none; }
+.search .input:focus + kbd { display: none; }
+.sresults {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30; margin: 0; padding: 6px; list-style: none; max-height: 60vh; overflow: auto;
+  background: var(--raised); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+}
+.sresults button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px; border: 0; border-radius: 6px; background: none; text-align: left; cursor: pointer; font-weight: 700; font-size: 14px; }
+.sresults button[aria-selected="true"], .sresults button:hover { background: var(--accent-soft); color: var(--accent); }
+.sresults .slabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sresults .shint { flex: none; font-size: 12px; font-weight: 400; color: var(--muted); }
+.sresults .sempty { padding: 10px; color: var(--muted); font-size: 13.5px; }
+.hit { position: absolute; background: rgb(255 196 0 / .38); border-radius: 2px; pointer-events: none; }
+.hit.cur { background: rgb(255 140 0 / .5); outline: 2px solid #e07b00; }
+.findbar {
+  position: sticky; top: 12px; z-index: 5; width: max-content; max-width: calc(100% - 32px); margin: 12px 16px -50px auto;
+  display: flex; align-items: center; gap: 4px; padding: 6px 6px 6px 14px; border-radius: 999px;
+  background: var(--ink); color: var(--bg); font-size: 13.5px; font-weight: 700; box-shadow: var(--shadow);
+}
+.findbar span { margin-right: 6px; }
+.findbar button { width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgb(127 127 127 / .3); color: inherit; cursor: pointer; }
 
 .layout { display: grid; grid-template-columns: 290px 1fr; min-height: 0; }
 .panel {
@@ -94,6 +117,10 @@ button, input, select { font: inherit; color: inherit; }
 .tbox { position: absolute; padding: 0; border: 0; background: transparent; outline: 1px dashed rgb(181 42 45 / .45); outline-offset: 1px; border-radius: 2px; cursor: text; }
 .tbox:hover, .tbox:focus-visible { background: rgb(181 42 45 / .12); outline: 1.5px solid #b52a2d; }
 .cover { position: absolute; pointer-events: none; }
+.field.cb { aspect-ratio: 1; display: grid; place-items: center; background: #fff; border: 1.5px solid #2a2d33; border-radius: 2px; }
+.field.cb svg { width: 82%; height: 82%; color: #14171f; pointer-events: none; }
+.field.input { display: flex; align-items: center; overflow: hidden; background: rgb(181 42 45 / .06); border: 1.5px dashed #8a8f99; border-radius: 3px; }
+.field.input .lbl { padding: 0 6px; font: 700 clamp(9px, calc(var(--ph) * .011), 14px)/1 var(--font-body); color: #6b6e76; white-space: nowrap; pointer-events: none; }
 .tool span { font-weight: 600; font-size: 14px; }
 
 .library { display: grid; gap: 8px; }
@@ -299,13 +326,21 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   .viewer { overflow: visible; }
   .brand .file { display: none; }
   .bar .btn .lbl-long { display: none; }
+  .search { order: 3; flex-basis: 100%; max-width: none; }
+  .search kbd { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
 <div class="app">
   <header class="bar">
-    <div class="brand"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="var(--accent)"/><path d="M9.5 23.5c2.2-5.6 4.2-10.5 6.2-10.5 2.6 0 .3 9.6 2.8 9.6 1.9 0 2.5-4.1 4.5-4.1 1.7 0 1.5 2.7 3.3 2.7 1.3 0 2.2-1 3.7-2.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 29h20" stroke="#fff" stroke-opacity=".7" stroke-width="1.8" stroke-linecap="round"/></svg><span class="app-name"><b>Papeles</b><span class="file" id="fileName">Loading</span></span></div>
+    <div class="brand"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="var(--accent)"/><path d="M9.5 23.5c2.2-5.6 4.2-10.5 6.2-10.5 2.6 0 .3 9.6 2.8 9.6 1.9 0 2.5-4.1 4.5-4.1 1.7 0 1.5 2.7 3.3 2.7 1.3 0 2.2-1 3.7-2.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 29h20" stroke="#fff" stroke-opacity=".7" stroke-width="1.8" stroke-linecap="round"/></svg><span class="app-name"><b>Papeles</b><span class="file" id="fileName">No file open</span></span></div>
+    <div class="search" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="search" class="input" placeholder="Search tools or find text in the PDF" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="searchList" aria-label="Search tools or find text">
+      <kbd aria-hidden="true">Ctrl K</kbd>
+      <ul class="sresults" id="searchList" role="listbox" hidden></ul>
+    </div>
     <label class="btn" for="fileInput" id="openBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 18v-6M9 15l3-3 3 3"/></svg>
       Open PDF
@@ -358,12 +393,20 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>
             <span>Text</span>
           </button>
+          <button class="tool" type="button" id="toolCheck" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8 12 3 3 5-6"/></svg>
+            <span>Checkbox</span>
+          </button>
+          <button class="tool" type="button" id="toolInput" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2" stroke-dasharray="3 2"/><path d="M7 10v4"/></svg>
+            <span>Fill-in field</span>
+          </button>
           <button class="tool wide" type="button" id="toolEdit" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h10v2M9 5v12M7 17h4"/><path d="m14.5 19.5 1-3.5 4.5-4.5 2.5 2.5-4.5 4.5z"/></svg>
             <span>Edit existing text</span>
           </button>
         </div>
-        <p class="note" style="margin-top:10px">Tip: paste an image or text with <strong>Ctrl/Cmd+V</strong> to place it. Copy a placed item to duplicate it.</p>
+        <p class="note" style="margin-top:10px">Tip: paste an image or text with <strong>Ctrl/Cmd+V</strong> to place it. <strong>Ctrl/Cmd+Z</strong> undoes. Checkboxes and fill-in fields stay fillable in the saved PDF.</p>
       </section>
 
       <section>
@@ -377,8 +420,9 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
 
     <main class="viewer" id="viewer">
       <div class="chip" id="chip" hidden><span id="chipText">Click a page to place it</span><button type="button" id="chipCancel">Cancel</button></div>
+      <div class="findbar" id="findbar" hidden><span id="findText"></span><button type="button" id="findPrev" aria-label="Previous match">&#x2191;</button><button type="button" id="findNext" aria-label="Next match">&#x2193;</button><button type="button" id="findClose" aria-label="Close search">&#x2715;</button></div>
       <div class="drop" id="drop" hidden>Drop the PDF to open it</div>
-      <div class="pages" id="pages"><div class="loading">Preparing sample document</div></div>
+      <div class="pages" id="pages"></div>
     </main>
   </div>
 </div>
@@ -486,61 +530,19 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     return new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  /* ---------- sample document ---------- */
-  async function makeSample() {
-    const { PDFDocument, StandardFonts, rgb } = PDFLib;
-    const doc = await PDFDocument.create();
-    const page = doc.addPage([612, 792]);
-    const reg = await doc.embedFont(StandardFonts.Helvetica);
-    const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-    const ink = rgb(0.09, 0.1, 0.13), grey = rgb(0.42, 0.45, 0.5);
-    let y = 720;
-    page.drawText('SAMPLE DOCUMENT', { x: 72, y: y + 22, size: 9, font: bold, color: rgb(0.71, 0.16, 0.18) });
-    page.drawText('Mutual Non-Disclosure Agreement', { x: 72, y, size: 20, font: bold, color: ink });
-    y -= 34;
-    const wrap = (text, size, font, maxW) => {
-      const words = text.split(' '), lines = []; let line = '';
-      for (const w of words) { const t = line ? line + ' ' + w : w; if (font.widthOfTextAtSize(t, size) > maxW) { lines.push(line); line = w; } else line = t; }
-      if (line) lines.push(line); return lines;
-    };
-    const para = (text) => { for (const l of wrap(text, 10.5, reg, 468)) { page.drawText(l, { x: 72, y, size: 10.5, font: reg, color: ink }); y -= 15.5; } y -= 8; };
-    const head = (text) => { page.drawText(text, { x: 72, y, size: 11.5, font: bold, color: ink }); y -= 18; };
-    para('This Agreement is entered into by and between the Disclosing Party and the Receiving Party (together, the Parties) for the purpose of evaluating a possible business relationship.');
-    head('1. Confidential Information');
-    para('Confidential Information means any technical, commercial or financial information disclosed by one Party to the other, in writing or orally, that is marked confidential or would reasonably be understood to be confidential.');
-    head('2. Obligations');
-    para('The Receiving Party shall use the Confidential Information only for the stated purpose, shall not disclose it to any third party without prior written consent, and shall protect it with at least reasonable care.');
-    head('3. Term');
-    para('The obligations in this Agreement remain in effect for three (3) years from the date of the last signature below.');
-    head('4. Governing Law');
-    para('This Agreement shall be governed by the laws of the Republic of the Philippines.');
-    y -= 26;
-    const block = (x, title) => {
-      let by = y;
-      page.drawText(title, { x, y: by, size: 11, font: bold, color: ink }); by -= 52;
-      for (const label of ['Signature', 'Printed name', 'Date']) {
-        page.drawLine({ start: { x, y: by }, end: { x: x + 210, y: by }, thickness: 0.8, color: grey });
-        page.drawText(label, { x, y: by - 12, size: 8.5, font: reg, color: grey }); by -= 46;
-      }
-    };
-    block(72, 'Disclosing Party'); block(330, 'Receiving Party');
-    page.drawText('Page 1 of 1', { x: 72, y: 40, size: 8, font: reg, color: grey });
-    return doc.save();
-  }
-
   /* ---------- rendering ---------- */
   async function openPdf(bytes, name) {
-    state.fields = []; state.pages = []; state.selected = null; if (editing) setEditing(false); disarm();
+    state.fields = []; state.pages = []; state.selected = null; resetHistory(); clearFind(); if (editing) setEditing(false); disarm();
     pagesEl.innerHTML = '<div class="loading">Opening ' + name.replace(/[<>&]/g, '') + '</div>';
     let doc;
     try {
-      doc = await pdfjsLib.getDocument({ data: bytes.slice() }).promise;
+      doc = await pdfjsLib.getDocument({ data: bytes.slice(), fontExtraProperties: true }).promise;
     } catch (e) {
       pagesEl.innerHTML = '<div class="loading">This file could not be opened. Check that it is a PDF and is not password protected.</div>';
       return false;
     }
     state.bytes = bytes; state.name = name; state.pdfDoc = doc;
-    $('#fileName').textContent = name;
+    $('#fileName').textContent = name; $('#downloadBtn').disabled = false;
     pagesEl.innerHTML = '';
     const items = [];
     for (let i = 1; i <= doc.numPages; i++) {
@@ -587,6 +589,8 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     const a = state.armed;
     $('#toolDate').setAttribute('aria-pressed', a && a.type === 'date' ? 'true' : 'false');
     $('#toolText').setAttribute('aria-pressed', a && a.type === 'text' ? 'true' : 'false');
+    $('#toolCheck').setAttribute('aria-pressed', a && a.type === 'cb' ? 'true' : 'false');
+    $('#toolInput').setAttribute('aria-pressed', a && a.type === 'input' ? 'true' : 'false');
     document.querySelectorAll('.sig').forEach((el) => el.setAttribute('aria-pressed', a && a.libId === el.dataset.id ? 'true' : 'false'));
   }
   function onOverlayDown(e) {
@@ -601,6 +605,12 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
       const w = a.kind === 'initials' ? 0.1 : a.kind === 'pasted image' ? 0.3 : 0.24;
       const h = w * a.ratio * pageAspect;
       f = { id: ++uid, page: p.index, type: 'image', src: a.src, ratio: a.ratio, w, x: clamp(fx - w / 2, 0, 1 - w), y: clamp(fy - h / 2, 0, 1 - h) };
+    } else if (a.type === 'cb') {
+      const w = 0.024, h = w * pageAspect;
+      f = { id: ++uid, page: p.index, type: 'cb', checked: true, w, x: clamp(fx - w / 2, 0, 1 - w), y: clamp(fy - h / 2, 0, 1 - h) };
+    } else if (a.type === 'input') {
+      const w = 0.3, h = 0.028;
+      f = { id: ++uid, page: p.index, type: 'input', w, h, x: clamp(fx, 0, 1 - w), y: clamp(fy - h / 2, 0, 1 - h) };
     } else {
       const fs = 0.016;
       f = { id: ++uid, page: p.index, type: 'text', text: a.type === 'date' ? todayString() : (a.text || 'Type here'), fs, x: clamp(fx, 0, 0.98), y: clamp(fy - fs * 0.6, 0, 0.98) };
@@ -612,10 +622,29 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   }
   const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 
-  function addField(f) { state.fields.push(f); mountField(f); select(f); }
+  function addField(f) { state.fields.push(f); mountField(f); select(f); commit(); }
+  // Undo history: snapshots of the placed items, taken after each finished change.
+  const hist = { past: [], future: [], last: '[]' };
+  const snapshot = () => JSON.stringify(state.fields.map(({ el, coverEl, ...d }) => d));
+  function commit() {
+    const s = snapshot(); if (s === hist.last) return;
+    hist.past.push(hist.last); if (hist.past.length > 100) hist.past.shift();
+    hist.future = []; hist.last = s;
+  }
+  function resetHistory() { hist.past = []; hist.future = []; hist.last = '[]'; }
+  function restore(s) {
+    for (const f of state.fields) { f.el.remove(); if (f.coverEl) f.coverEl.remove(); }
+    state.fields = []; state.selected = null;
+    for (const d of JSON.parse(s)) { state.fields.push(d); mountField(d); }
+    hist.last = s;
+    if (editing) state.pages.forEach(renderTextBoxes);
+  }
+  function undo() { if (!hist.past.length) { toast('Nothing to undo.'); return; } hist.future.push(hist.last); restore(hist.past.pop()); }
+  function redo() { if (!hist.future.length) { toast('Nothing to redo.'); return; } hist.past.push(hist.last); restore(hist.future.pop()); }
   function removeField(f) {
     state.fields = state.fields.filter((x) => x !== f); f.el.remove(); if (f.coverEl) f.coverEl.remove(); if (state.selected === f) state.selected = null;
     if (f.srcKey && editing) renderTextBoxes(state.pages[f.page]);
+    commit();
   }
   function select(f) {
     if (state.selected && state.selected.el) state.selected.el.classList.remove('selected');
@@ -623,7 +652,8 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   }
   function place(f) {
     f.el.style.left = f.x * 100 + '%'; f.el.style.top = f.y * 100 + '%';
-    if (f.type === 'image') f.el.style.width = f.w * 100 + '%';
+    if (f.type === 'image' || f.type === 'cb') f.el.style.width = f.w * 100 + '%';
+    else if (f.type === 'input') { f.el.style.width = f.w * 100 + '%'; f.el.style.height = f.h * 100 + '%'; }
     else f.el.querySelector('.txt').style.fontSize = 'calc(var(--ph) * ' + f.fs + ')';
   }
   function focusText(f, selectAll) {
@@ -635,6 +665,10 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     const el = document.createElement('div'); el.className = 'field ' + f.type; f.el = el;
     if (f.type === 'image') {
       const img = new Image(); img.src = f.src; img.alt = 'Signature'; img.draggable = false; el.append(img);
+    } else if (f.type === 'cb') {
+      el.innerHTML = f.checked ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></svg>' : ''; el.title = 'Click to tick or untick';
+    } else if (f.type === 'input') {
+      el.innerHTML = '<span class="lbl">Fill-in field</span>'; el.title = 'A fillable text box in the saved PDF';
     } else {
       if (f.cover) {
         const c = document.createElement('div'); c.className = 'cover'; f.coverEl = c;
@@ -642,12 +676,21 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
         state.pages[f.page].overlay.append(c);
       }
       const t = document.createElement('span'); t.className = 'txt'; t.textContent = f.text;
-      if (f.font) t.style.fontFamily = FONT_CSS[f.font];
-      if (f.bold) t.style.fontWeight = '700';
+      if (f.ofont) t.style.fontFamily = '"' + f.ofont.loaded + '", ' + FONT_CSS[f.font || 'sans']; // the PDF's own font, as loaded by pdf.js
+      else if (f.font) t.style.fontFamily = FONT_CSS[f.font];
+      if (f.bold && !f.ofont) t.style.fontWeight = '700';
       if (f.color) t.style.color = f.color;
       t.setAttribute('contenteditable', 'true'); t.spellcheck = false;
-      t.addEventListener('input', () => { f.text = t.innerText.replace(/\n$/, ''); });
-      t.addEventListener('blur', () => { if (!f.text.trim() && !f.cover) removeField(f); }); // an emptied edit still hides the old text
+      t.addEventListener('input', () => {
+        f.text = t.innerText.replace(/\n$/, '');
+        if (f.ofont && !f.warned && f.text.split('\n').some((l) => encodeOrig(f.ofont, l) === null)) {
+          f.warned = true; toast('A character you typed is not in this PDF\'s font, so this line will use a similar standard font.');
+        }
+      });
+      t.addEventListener('blur', () => { // an emptied edit still hides the old text
+        if (!f.text.trim() && !f.cover) { removeField(f); return; }
+        commit();
+      });
       el.append(t);
     }
     const handle = document.createElement('div'); handle.className = 'handle'; handle.title = 'Resize';
@@ -665,7 +708,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
       e.preventDefault(); e.stopPropagation();
       const wasSelected = state.selected === f; select(f);
       const r = state.pages[f.page].overlay.getBoundingClientRect();
-      const sx = e.clientX, sy = e.clientY, ox = f.x, oy = f.y, ow = f.w, ofs = f.fs;
+      const sx = e.clientX, sy = e.clientY, ox = f.x, oy = f.y, ow = f.w, oh = f.h, ofs = f.fs;
       const resizing = e.target === handle; const elRect = el.getBoundingClientRect();
       let moved = false;
       try { el.setPointerCapture(e.pointerId); } catch { /* capture is optional */ }
@@ -674,6 +717,8 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
         if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
         if (resizing) {
           if (f.type === 'image') f.w = clamp(ow + dx / r.width, 0.03, 1 - f.x);
+          else if (f.type === 'cb') f.w = clamp(ow + Math.max(dx, dy) / r.width, 0.01, 0.2);
+          else if (f.type === 'input') { f.w = clamp(ow + dx / r.width, 0.04, 1 - f.x); f.h = clamp(oh + dy / r.height, 0.012, 1 - f.y); }
           else f.fs = clamp(ofs * (1 + dy / Math.max(elRect.height, 8)), 0.006, 0.08);
         } else {
           f.x = clamp(ox + dx / r.width, 0, 1 - elRect.width / r.width);
@@ -684,6 +729,8 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
       const up = () => {
         el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
         if (!moved && txt && wasSelected) focusText(f, false);
+        if (!moved && f.type === 'cb') { f.checked = !f.checked; f.el.querySelector('svg')?.remove(); if (f.checked) f.el.insertAdjacentHTML('afterbegin', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></svg>'); }
+        if (moved || f.type === 'cb') commit();
       };
       el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
     });
@@ -691,9 +738,13 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
 
   document.addEventListener('keydown', (e) => {
     if ($('#dlg').open || view !== 'sign') return;
+    const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
+    if (mod && (k === 'z' || k === 'y') && !isTyping(document.activeElement)) { // inside a text box the browser's own undo applies
+      e.preventDefault(); (k === 'y' || e.shiftKey) ? redo() : undo(); return;
+    }
     if (e.key === 'Escape') { if (editing && !document.activeElement?.isContentEditable) setEditing(false); disarm(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
-    const editing = document.activeElement && document.activeElement.isContentEditable;
-    if ((e.key === 'Delete' || e.key === 'Backspace') && state.selected && !editing) { e.preventDefault(); removeField(state.selected); }
+    const typingNow = document.activeElement && document.activeElement.isContentEditable;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && state.selected && !typingNow) { e.preventDefault(); removeField(state.selected); }
   });
   $('#chipCancel').addEventListener('click', () => { if (editing) setEditing(false); else disarm(); });
 
@@ -739,6 +790,8 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   $('#toolInit').addEventListener('click', () => openDialog('initials'));
   $('#toolDate').addEventListener('click', () => (state.armed && state.armed.type === 'date') ? disarm() : arm({ type: 'date' }, 'date'));
   $('#toolText').addEventListener('click', () => (state.armed && state.armed.type === 'text') ? disarm() : arm({ type: 'text' }, 'text box'));
+  $('#toolCheck').addEventListener('click', () => (state.armed && state.armed.type === 'cb') ? disarm() : arm({ type: 'cb' }, 'checkbox'));
+  $('#toolInput').addEventListener('click', () => (state.armed && state.armed.type === 'input') ? disarm() : arm({ type: 'input' }, 'fill-in field'));
 
   function setTab(t) {
     tab = t;
@@ -950,9 +1003,38 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     const fontFor = async (f) => { const k = FONTS[f.font || 'sans'][f.bold ? 1 : 0]; return fontCache[k] || (fontCache[k] = await pdf.embedFont(StandardFonts[k])); };
     const toRgb = (h) => rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255);
     const pages = pdf.getPages(); const cache = new Map();
+    const fontRefs = new Map(), fontKeys = new Map();
+    const strip = (n) => n.replace(/^[A-Z]{6}\+/, '');
+    for (const [ref, obj] of pdf.context.enumerateIndirectObjects()) {
+      if (!(obj instanceof PDFLib.PDFDict) || obj.get(PDFLib.PDFName.of('Type')) !== PDFLib.PDFName.of('Font')) continue;
+      const sub = obj.get(PDFLib.PDFName.of('Subtype'));
+      if (sub === PDFLib.PDFName.of('CIDFontType0') || sub === PDFLib.PDFName.of('CIDFontType2')) continue; // descendants of a composite font
+      const bf = obj.get(PDFLib.PDFName.of('BaseFont')); if (!bf || !bf.decodeText) continue;
+      const n = bf.decodeText(); if (!fontRefs.has(n)) fontRefs.set(n, ref); if (!fontRefs.has('~' + strip(n))) fontRefs.set('~' + strip(n), ref);
+    }
+    async function origFontKey(base, pageIndex, page) {
+      const ref = fontRefs.get(base) || fontRefs.get('~' + strip(base)); if (!ref) return null;
+      const id = pageIndex + '|' + ref.toString();
+      if (!fontKeys.has(id)) fontKeys.set(id, page.node.newFontDictionary('PapelesF', ref));
+      return fontKeys.get(id);
+    }
+    const form = pdf.getForm();
+    const uniq = (prefix) => { let i = 1, n; do { n = prefix + '_' + i++; } while (form.getFieldMaybe(n)); return n; };
     for (const f of state.fields) {
       const P = state.pages[f.page], vp = P.vp1, page = pages[f.page];
       const W = vp.width, H = vp.height, rotate = degrees(P.rotate);
+      if (f.type === 'cb') {
+        const w = f.w * W, [x, y] = vp.convertToPdfPoint(f.x * W, f.y * H + w);
+        const cb = form.createCheckBox(uniq('checkbox'));
+        cb.addToPage(page, { x, y, width: w, height: w, borderWidth: 1, borderColor: rgb(0.16, 0.18, 0.2), rotate });
+        if (f.checked) cb.check();
+        continue;
+      }
+      if (f.type === 'input') {
+        const w = f.w * W, h = f.h * H, [x, y] = vp.convertToPdfPoint(f.x * W, (f.y + f.h) * H);
+        form.createTextField(uniq('text')).addToPage(page, { x, y, width: w, height: h, borderWidth: 1, borderColor: rgb(0.55, 0.57, 0.62), rotate });
+        continue;
+      }
       if (f.type === 'image') {
         const w = f.w * W, h = w * f.ratio;
         const [x, y] = vp.convertToPdfPoint(f.x * W, f.y * H + h);
@@ -967,6 +1049,20 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
         const text = (f.text || '').replace(/\s+$/, ''); if (!text) continue;
         const tfont = await fontFor(f), tcolor = f.color ? toRgb(f.color) : rgb(0.08, 0.09, 0.12);
         const size = f.fs * H; const lines = text.split('\n');
+        const hexes = f.ofont ? lines.map((l) => encodeOrig(f.ofont, l)) : null;
+        if (hexes && hexes.every((h) => h !== null)) {
+          const key = await origFontKey(f.ofont.base, f.page, page);
+          if (key) {
+            const a = (P.rotate * Math.PI) / 180, cos = Math.cos(a), sin = Math.sin(a), c = f.color ? toRgb(f.color) : rgb(0.08, 0.09, 0.12);
+            const { pushGraphicsState, popGraphicsState, beginText, endText, setFontAndSize, setTextMatrix, showText, setFillingRgbColor, PDFHexString } = PDFLib;
+            hexes.forEach((hx, i) => {
+              const [x, y] = vp.convertToPdfPoint(f.x * W, f.y * H + size * (1.0 + 1.2 * i));
+              page.pushOperators(pushGraphicsState(), setFillingRgbColor(c.red, c.green, c.blue), beginText(), setFontAndSize(key, size),
+                setTextMatrix(cos, sin, -sin, cos, x, y), showText(PDFHexString.of(hx)), endText(), popGraphicsState());
+            });
+            continue;
+          }
+        }
         let encodable = true; try { tfont.encodeText(text.replace(/\n/g, ' ')); } catch { encodable = false; }
         if (encodable) {
           lines.forEach((line, i) => {
@@ -1055,19 +1151,41 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     for (let i = 0; i < d.length; i += 4) { const L = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114; if (L < best) { best = L; ink = [d[i], d[i + 1], d[i + 2]]; } }
     return { bg: hex(...bg), ink: hex(...ink) };
   }
+  // How to write new text with a font the PDF already contains: map each character to the font's own code.
+  function fontEncoder(fobj, loaded) {
+    if (!fobj || fobj.isType3Font || !fobj.toUnicode || !fobj.name) return null;
+    const tu = fobj.toUnicode, map = {};
+    if (tu._map) tu._map.forEach((u, code) => { if (typeof u === 'string' && [...u].length === 1 && !(u in map)) map[u] = code; });
+    else if (tu.firstChar !== undefined) { for (let c = tu.firstChar; c <= tu.lastChar; c++) map[String.fromCharCode(c)] = c; }
+    else return null;
+    let bytes = 1;
+    if (fobj.cMap) { // composite font: only identity-style 2-byte encodings are supported
+      const cr = fobj.cMap.codespaceRanges || [];
+      bytes = cr.findIndex((r) => r && r.length) + 1;
+      if (bytes !== 2 || (fobj.cMap.name && !/identity/i.test(fobj.cMap.name))) return null;
+    }
+    if (fobj.widths) for (const [u, code] of Object.entries(map)) if (!fobj.widths[code] && u !== ' ') delete map[u]; // subset fonts lack unused glyphs
+    return Object.keys(map).length ? { loaded, base: fobj.name, bytes, map } : null;
+  }
+  function encodeOrig(of, text) {
+    let hex = '';
+    for (const ch of text) { const code = of.map[ch]; if (code === undefined) return null; hex += code.toString(16).padStart(of.bytes * 2, '0'); }
+    return hex;
+  }
   async function pageTextItems(p) {
     if (p.textItems) return p.textItems;
     const page = await state.pdfDoc.getPage(p.index + 1);
-    const tc = await page.getTextContent(); const out = [];
+    const tc = await page.getTextContent(); const out = [], encCache = {};
     tc.items.forEach((it, k) => {
       if (!it.str || !it.str.trim()) return;
       const tx = pdfjsLib.Util.transform(p.vp1.transform, it.transform);
       if (Math.abs(tx[1]) > 0.01 || Math.abs(tx[2]) > 0.01) return; // rotated text is not editable here
       const size = Math.hypot(tx[2], tx[3]); if (size < 2) return;
       const style = tc.styles[it.fontName] || {}; let name = '';
-      try { name = page.commonObjs.get(it.fontName).name || ''; } catch { /* font name unknown */ }
+      let ofont = null;
+      try { const fobj = page.commonObjs.get(it.fontName); name = fobj.name || ''; ofont = encCache[it.fontName] !== undefined ? encCache[it.fontName] : (encCache[it.fontName] = fontEncoder(fobj, it.fontName)); } catch { /* font not loaded */ }
       const fam = /mono|courier/i.test(style.fontFamily + name) ? 'mono' : /serif/i.test(style.fontFamily) && !/sans/i.test(style.fontFamily) || /times|georgia|garamond|roman/i.test(name) ? 'serif' : 'sans';
-      out.push({ key: p.index + ':' + k, str: it.str, size, left: tx[4], base: tx[5], width: it.width * p.vp1.scale, font: fam, bold: /bold|black|heavy|semibold/i.test(name) });
+      out.push({ key: p.index + ':' + k, str: it.str, size, left: tx[4], base: tx[5], width: it.width * p.vp1.scale, font: fam, bold: /bold|black|heavy|semibold/i.test(name), ofont });
     });
     return (p.textItems = out);
   }
@@ -1103,7 +1221,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
     const { bg, ink } = sampleColors(p, box);
     const f = {
       id: ++uid, page: p.index, type: 'text', text: it.str, fs: it.size / H, x: it.left / W, y: (it.base - it.size) / H,
-      font: it.font, bold: it.bold, color: ink, srcKey: it.key,
+      font: it.font, bold: it.bold, color: ink, srcKey: it.key, ofont: it.ofont,
       cover: { x: box.l / W, y: box.t / H, w: box.w / W, h: box.h / H, color: bg },
     };
     addField(f); renderTextBoxes(p); focusText(f, false);
@@ -1491,6 +1609,138 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   wsEl.addEventListener('dragleave', (e) => { if (!wsEl.contains(e.relatedTarget)) wsEl.classList.remove('over'); });
   wsEl.addEventListener('drop', (e) => { if (dragFrom !== null) return; e.preventDefault(); wsEl.classList.remove('over'); handleViewFiles([...e.dataTransfer.files]); });
 
+  /* ---------- search: tools, actions and text in the open PDF ---------- */
+  const ACTIONS = [
+    { label: 'Sign a PDF', hint: 'Sign', kw: 'sign signature esign e-sign', run: () => setView('sign') },
+    { label: 'Add signature', hint: 'Sign', kw: 'signature draw type upload autograph pirma', run: () => { setView('sign'); openDialog('signature'); } },
+    { label: 'Add initials', hint: 'Sign', kw: 'initials', run: () => { setView('sign'); openDialog('initials'); } },
+    { label: 'Add date', hint: 'Sign', kw: 'date today petsa', run: () => { setView('sign'); arm({ type: 'date' }, 'date'); } },
+    { label: 'Add text', hint: 'Sign', kw: 'text type write note label', run: () => { setView('sign'); arm({ type: 'text' }, 'text box'); } },
+    { label: 'Add checkbox', hint: 'Forms', kw: 'checkbox tick check mark form fillable', run: () => { setView('sign'); arm({ type: 'cb' }, 'checkbox'); } },
+    { label: 'Add fill-in field', hint: 'Forms', kw: 'form field fillable input text box blank', run: () => { setView('sign'); arm({ type: 'input' }, 'fill-in field'); } },
+    { label: 'Edit existing text', hint: 'Edit', kw: 'edit text change replace modify correct', run: () => { setView('sign'); state.pdfDoc ? setEditing(true) : toast('Open a PDF first.'); } },
+    { label: 'Merge PDFs', hint: 'Merge', kw: 'merge combine join append', run: () => setView('merge') },
+    { label: 'Split PDF', hint: 'Split', kw: 'split extract pages separate cut', run: () => setView('split') },
+    { label: 'Images to PDF', hint: 'Convert', kw: 'image images jpg jpeg png webp photo picture scan to pdf convert', run: () => setView('img2pdf') },
+    { label: 'PDF to images', hint: 'Convert', kw: 'pdf to jpg jpeg png image picture export convert', run: () => setView('pdf2img') },
+    { label: 'OCR: read text in scans', hint: 'OCR', kw: 'ocr scan scanned recognize text searchable extract copy photo', run: () => setView('ocr') },
+    { label: 'Open a PDF', hint: 'File', kw: 'open upload file load browse', run: () => $('#fileInput').click() },
+    { label: 'Download signed PDF', hint: 'File', kw: 'download save export finish', run: () => { setView('sign'); $('#downloadBtn').click(); } },
+    { label: 'Undo', hint: 'Ctrl/Cmd+Z', kw: 'undo revert back', run: () => { setView('sign'); undo(); } },
+  ];
+  const sInput = $('#search'), sList = $('#searchList');
+  if (/Mac|iPhone|iPad/.test(navigator.platform)) $('.search kbd').textContent = '\u2318K';
+  let sItems = [], sActive = 0;
+  function searchResults(q) {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    const out = [];
+    if (words.length) {
+      for (const a of ACTIONS) {
+        const hay = (a.label + ' ' + a.kw).toLowerCase();
+        if (!words.every((w) => hay.includes(w))) continue;
+        out.push({ ...a, score: a.label.toLowerCase().startsWith(words[0]) ? 0 : a.label.toLowerCase().includes(words[0]) ? 1 : 2 });
+      }
+      out.sort((a, b) => a.score - b.score);
+    }
+    if (state.pdfDoc && q.trim().length >= 2) {
+      const item = { label: 'Find “' + q.trim() + '” in ' + state.name, hint: 'Document', run: () => { setView('sign'); findInDoc(q.trim()); } };
+      out.length ? out.push(item) : out.unshift(item);
+    }
+    return out.slice(0, 9);
+  }
+  function renderSearch() {
+    const q = sInput.value; sItems = searchResults(q); sActive = 0;
+    sList.innerHTML = '';
+    if (!q.trim()) { sList.hidden = true; sInput.setAttribute('aria-expanded', 'false'); return; }
+    if (!sItems.length) sList.append(el('li', 'sempty', 'No matching tools. Open a PDF to search its text.'));
+    sItems.forEach((it, i) => {
+      const li = el('li'); const b = el('button'); b.type = 'button'; b.id = 'sopt' + i; b.setAttribute('role', 'option');
+      b.setAttribute('aria-selected', i === sActive ? 'true' : 'false');
+      b.append(el('span', 'slabel')); b.firstChild.textContent = it.label; b.append(el('span', 'shint')); b.lastChild.textContent = it.hint;
+      b.addEventListener('mousedown', (e) => e.preventDefault()); // keep focus in the box until the click lands
+      b.addEventListener('click', () => runSearchItem(i));
+      li.append(b); sList.append(li);
+    });
+    sList.hidden = false; sInput.setAttribute('aria-expanded', 'true');
+  }
+  function moveSearch(d) {
+    if (!sItems.length) return;
+    sActive = (sActive + d + sItems.length) % sItems.length;
+    sList.querySelectorAll('[role=option]').forEach((b, i) => b.setAttribute('aria-selected', i === sActive ? 'true' : 'false'));
+    sInput.setAttribute('aria-activedescendant', 'sopt' + sActive);
+  }
+  function runSearchItem(i) {
+    const it = sItems[i]; if (!it) return;
+    sList.hidden = true; sInput.setAttribute('aria-expanded', 'false');
+    if (!/^Find /.test(it.label)) { sInput.value = ''; sInput.blur(); }
+    it.run();
+  }
+  sInput.addEventListener('input', renderSearch);
+  sInput.addEventListener('focus', () => { if (sInput.value.trim()) renderSearch(); });
+  sInput.addEventListener('blur', () => setTimeout(() => { sList.hidden = true; sInput.setAttribute('aria-expanded', 'false'); }, 120));
+  sInput.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); moveSearch(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); moveSearch(-1); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (find.q && find.q === sInput.value.trim() && find.hits.length && sList.hidden) { goHit(find.i + (e.shiftKey ? -1 : 1)); return; }
+      runSearchItem(sActive);
+    } else if (e.key === 'Escape') { e.stopPropagation(); sList.hidden = true; sInput.value = ''; sInput.blur(); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); sInput.focus(); sInput.select(); }
+  });
+
+  // Find in the open document
+  const find = { q: '', hits: [], i: -1 };
+  function clearFind() {
+    find.hits.forEach((h) => h.remove()); find.hits = []; find.i = -1; find.q = '';
+    $('#findbar').hidden = true;
+  }
+  const mctx = document.createElement('canvas').getContext('2d');
+  function subRange(it, k, n) {
+    mctx.font = (it.bold ? '700 ' : '') + '100px ' + FONT_CSS[it.font || 'sans'];
+    const full = mctx.measureText(it.str).width || 1;
+    return [(it.width * mctx.measureText(it.str.slice(0, k)).width) / full, (it.width * mctx.measureText(it.str.slice(k, k + n)).width) / full];
+  }
+  async function findInDoc(q) {
+    clearFind(); if (!state.pdfDoc || !q) return;
+    find.q = q; const ql = q.toLowerCase();
+    for (const p of state.pages) {
+      const items = await pageTextItems(p), W = p.vp1.width, H = p.vp1.height;
+      for (const it of items) {
+        const s = it.str.toLowerCase(); let k = s.indexOf(ql);
+        while (k !== -1) { // measure the text before and inside the match to place the highlight
+          const [pre, mid] = subRange(it, k, ql.length), x = it.left + pre, w = mid;
+          const d = el('div', 'hit');
+          Object.assign(d.style, { left: (x / W) * 100 + '%', top: ((it.base - it.size * 0.85) / H) * 100 + '%', width: (w / W) * 100 + '%', height: ((it.size * 1.1) / H) * 100 + '%' });
+          p.overlay.append(d); find.hits.push(d);
+          k = s.indexOf(ql, k + ql.length);
+        }
+      }
+    }
+    $('#findbar').hidden = false;
+    if (find.hits.length) goHit(0);
+    else $('#findText').textContent = 'No matches for “' + q + '”' + (state.pdfDoc ? '. Scanned pages need OCR first.' : '');
+  }
+  function goHit(i) {
+    if (!find.hits.length) return;
+    find.hits[find.i]?.classList.remove('cur');
+    find.i = (i + find.hits.length) % find.hits.length;
+    const h = find.hits[find.i]; h.classList.add('cur');
+    h.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    $('#findText').textContent = (find.i + 1) + ' of ' + find.hits.length + ' for “' + find.q + '”';
+  }
+  $('#findPrev').addEventListener('click', () => goHit(find.i - 1));
+  $('#findNext').addEventListener('click', () => goHit(find.i + 1));
+  $('#findClose').addEventListener('click', clearFind);
+
+  function showEmptySign() {
+    pagesEl.innerHTML = '';
+    pagesEl.append(dropzone('Open a PDF to get started', 'Drop a file here, or paste it with Ctrl/Cmd+V. Your file stays on this device.', () => $('#fileInput').click(), 'Choose a PDF'));
+    $('#fileName').textContent = 'No file open'; $('#downloadBtn').disabled = true;
+  }
+
   /* ---------- copy and paste ---------- */
   const CLIP_MARK = '[Papeles item]';
   async function imageFileToPng(file) {
@@ -1548,6 +1798,6 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
   renderLibrary();
   const startView = location.hash.slice(1);
   if (VIEW_INFO[startView]) setView(startView);
-  makeSample().then((bytes) => openPdf(new Uint8Array(bytes), 'sample-nda.pdf')).then(() => renderView());
+  showEmptySign(); renderView();
 })();
 </script>
