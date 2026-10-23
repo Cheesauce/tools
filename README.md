@@ -66,7 +66,9 @@ Check with the platform team before enabling Pages if your organization's policy
 
 - Supported: Chrome, Edge, Safari and Firefox (current versions), desktop and mobile.
 - Password-protected PDFs can't be opened. Remove the password first.
+- **Preview before download**: every tool shows the finished file first (all pages, the images, the files inside a zip, or the text) with **Back to editing** and **Download** buttons. Nothing is saved until you choose Download.
 - **Search** (top bar, or Ctrl/Cmd+K) finds any tool by name, for example "jpg" or "combine", and finds text in the open PDF with highlighted matches. Scanned pages need OCR before their text can be found.
+- **Formatting bar**: select any text, date or edited text to change its font (original, Helvetica, Times or Courier), size in points, bold, italic and colour, or to duplicate or delete it. **Hide tools / Show tools** collapses the left panel.
 - **Checkbox** and **Fill-in field** are saved as real PDF form fields, so the downloaded file can be filled in with Acrobat, Preview or a browser.
 - **Ctrl/Cmd+Z** undoes and **Ctrl/Cmd+Shift+Z** or **Ctrl+Y** redoes changes on the Sign tab.
 - **OCR** works on the GitHub Pages site but not on the Claude preview link, which blocks the engine download. Results depend on scan quality, so check recognised text against the original.
