@@ -287,7 +287,7 @@ label.mini .input { height: 38px; width: auto; padding: 0 10px; color: var(--ink
 .add-card:hover { border-color: var(--accent); color: var(--accent); }
 .add-card .plus { font-size: 34px; line-height: 1; font-weight: 400; }
 .pagegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
-.pg { position: relative; display: grid; gap: 6px; padding: 8px; border: 2px solid transparent; border-radius: 12px; background: var(--raised); cursor: pointer; box-shadow: 0 0 0 1px var(--line); }
+.pg { position: relative; display: grid; gap: 6px; text-align: center; padding: 8px; border: 2px solid transparent; border-radius: 12px; background: var(--raised); cursor: pointer; box-shadow: 0 0 0 1px var(--line); }
 .pg:hover { box-shadow: 0 0 0 1px var(--muted); }
 .pg[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: none; }
 .pg .num { font: 700 12.5px var(--font-body); color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -319,7 +319,19 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
 .pv-body { overflow: auto; background: var(--bg); padding: 22px 16px; display: grid; gap: 22px; justify-items: center; align-content: start; }
 .pv-body.grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); justify-items: stretch; }
 .pv-page { margin: 0; display: grid; gap: 6px; justify-items: center; width: min(100%, 860px); }
-.pv-page canvas { width: 100%; height: auto; background: #fff; border-radius: 2px; box-shadow: var(--shadow); }
+.pv-page canvas { width: 100%; height: auto; background: #fff; border-radius: 2px; box-shadow: var(--shadow); display: block; }
+.pv-sheet { position: relative; width: 100%; }
+.pv-word { position: absolute; border-radius: 2px; background: rgb(40 160 90 / .16); outline: 1px solid rgb(40 160 90 / .55); pointer-events: auto; }
+.pv-word.low { background: rgb(255 150 0 / .3); outline: 1.5px solid rgb(225 115 0 / .9); }
+.pv-body.hide-words .pv-word { display: none; }
+.pv-opt { margin-left: auto; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.pv-key { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-weight: 400; color: var(--muted); }
+.pv-key i { width: 12px; height: 10px; border-radius: 2px; display: inline-block; margin-left: 4px; }
+.pv-key .ok { background: rgb(40 160 90 / .35); outline: 1px solid rgb(40 160 90); }
+.pv-key .low { background: rgb(255 150 0 / .45); outline: 1px solid rgb(225 115 0); }
+.pv-ocrtext { width: min(100%, 860px); margin-top: -10px; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); }
+.pv-ocrtext summary { padding: 10px 14px; cursor: pointer; font-weight: 700; font-size: 13.5px; }
+.pv-ocrtext pre { margin: 0; padding: 0 14px 14px; white-space: pre-wrap; font: 13px/1.55 var(--font-mono); color: var(--ink); }
 .pv-page figcaption, .pv-file figcaption { font-size: 12.5px; color: var(--muted); }
 .pv-file { margin: 0; display: grid; gap: 6px; min-width: 0; }
 .pv-file figcaption { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -354,6 +366,28 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
 .fmtbar .swatches button:hover { background: var(--c); box-shadow: 0 0 0 2px var(--accent); }
 .fmtbar input[type="color"] { width: 26px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; }
 .fmtbar .fsep { width: 1px; height: 22px; margin: 0 4px; background: var(--line); }
+dialog.lb { width: 100%; height: 100%; max-width: 100%; max-height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: rgb(12 13 16 / .96); color: #f1f1f3; }
+dialog.lb[open] { display: grid; grid-template-rows: auto 1fr; }
+dialog.lb::backdrop { background: rgb(0 0 0 / .6); }
+.lb-head { display: flex; align-items: center; gap: 10px; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); font-weight: 700; font-size: 14.5px; }
+.lb-head #lbTitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-head .spacer { flex: 1; }
+.lb-head .btn { background: rgb(255 255 255 / .1); color: #fff; border-color: rgb(255 255 255 / .25); }
+.lb-head .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+.lb-btn { flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgb(255 255 255 / .12); color: #fff; font-size: 16px; cursor: pointer; }
+.lb-stage { position: relative; min-height: 0; display: grid; place-items: center; padding: 4px 68px 24px; overflow: hidden; }
+.lb-canvas { position: relative; z-index: 1; max-width: 100%; max-height: 100%; width: auto; height: auto; background: #fff; box-shadow: 0 12px 40px rgb(0 0 0 / .5); }
+.lb-loading { position: absolute; margin: 0; color: #9a9ca3; display: none; }
+.lb-stage.loading .lb-loading { display: block; }
+.lb-nav { position: absolute; top: 50%; translate: 0 -50%; z-index: 2; width: 48px; height: 48px; border: 0; border-radius: 50%; background: rgb(255 255 255 / .14); color: #fff; font-size: 28px; line-height: 1; cursor: pointer; }
+.lb-nav:hover, .lb-btn:hover { background: rgb(255 255 255 / .24); }
+.lb-nav.prev { left: 12px; } .lb-nav.next { right: 12px; }
+.zoom { position: absolute; z-index: 2; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--raised); color: var(--ink); box-shadow: 0 0 0 1px var(--line), var(--shadow); cursor: pointer; }
+.zoom:hover { color: var(--accent); }
+.zoom svg { width: 16px; height: 16px; }
+.pg .zoom { top: 4px; left: 4px; }
+.card .zoom { top: 4px; right: 4px; }
+@media (max-width: 760px) { .lb-stage { padding: 4px 8px 72px; } .lb-nav { top: auto; bottom: 12px; translate: none; } }
 .toast {
   position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; z-index: 20;
   padding: 10px 16px; border-radius: 10px; background: var(--ink); color: var(--bg); font-weight: 500; font-size: 14px;
@@ -493,9 +527,23 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
   </div>
 </div>
 
+<dialog id="lbDlg" class="lb" aria-labelledby="lbTitle">
+  <div class="lb-head">
+    <span id="lbTitle"></span><span class="spacer"></span>
+    <button type="button" class="btn" id="lbSelect" aria-pressed="false" hidden>Select this page</button>
+    <button type="button" class="lb-btn" id="lbClose" aria-label="Close viewer">&#x2715;</button>
+  </div>
+  <div class="lb-stage" id="lbStage">
+    <button type="button" class="lb-nav prev" id="lbPrev" aria-label="Previous page">&#x2039;</button>
+    <button type="button" class="lb-nav next" id="lbNext" aria-label="Next page">&#x203A;</button>
+    <p class="lb-loading">Loading page...</p>
+  </div>
+</dialog>
+
 <dialog id="pvDlg" class="pv" aria-labelledby="pvHeading">
   <div class="pv-head">
     <div class="pv-titles"><h3 id="pvHeading">Preview</h3><p><span id="pvTitle"></span><span id="pvMeta" class="pv-meta"></span></p></div>
+    <label class="check pv-opt" for="pvWords" id="pvOcrOpt" hidden><input type="checkbox" id="pvWords" checked> Show recognised words <span class="pv-key"><i class="ok"></i>sure <i class="low"></i>check</span></label>
     <button class="btn ghost" type="button" id="pvX" aria-label="Close preview" style="width:38px;padding:0">&#x2715;</button>
   </div>
   <div id="pvBody" class="pv-body"></div>
@@ -1173,7 +1221,7 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
 
   /* ---------- PDF tools ---------- */
   async function saveFile(blob, filename, opts = {}) {
-    if (!opts.skipPreview && !(await showPreview({ blob, filename }))) { toast('Not downloaded. Make your changes and download again when ready.'); return false; }
+    if (!opts.skipPreview && !(await showPreview({ blob, filename, ocr: opts.ocr }))) { toast('Not downloaded. Make your changes and download again when ready.'); return false; }
     const downloads = await downloadsP;
     if (downloads) {
       try { await downloads.save({ filename, data: blob }); toast('Saved ' + filename); }
@@ -1217,13 +1265,15 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
     canvas.width = Math.round(vp.width); canvas.height = Math.round(vp.height);
     const ctx = canvas.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     await page.render({ canvasContext: ctx, viewport: vp, intent: 'print' }).promise;
+    return v1;
   }
-  function showPreview({ blob, filename, entries }) {
+  function showPreview({ blob, filename, entries, ocr }) {
     return new Promise((resolve) => {
       pvCleanup(); pv.resolve = resolve; const token = pv.token;
       const d = $('#pvDlg'), body = $('#pvBody');
       body.innerHTML = ''; body.className = 'pv-body';
       $('#pvTitle').textContent = filename;
+      $('#pvOcrOpt').hidden = !ocr; $('#pvWords').checked = true;
       $('#pvMeta').textContent = entries ? plural(entries.length, 'file') + ' in one zip' : fmtSize(blob.size);
       d.showModal(); $('#pvDownload').focus();
       const ext = filename.split('.').pop().toLowerCase();
@@ -1248,12 +1298,31 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
           const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise; pv.docs.push(doc);
           const n = doc.numPages, shown = Math.min(n, 40), canvases = [];
           $('#pvMeta').textContent = plural(n, 'page') + ', ' + fmtSize(blob.size);
+          const sheets = [];
           for (let i = 0; i < shown; i++) {
-            const fig = el('figure', 'pv-page'), c = document.createElement('canvas'), cap = el('figcaption');
-            cap.textContent = 'Page ' + (i + 1) + ' of ' + n; fig.append(c, cap); body.append(fig); canvases.push(c);
+            const fig = el('figure', 'pv-page'), sheet = el('div', 'pv-sheet'), c = document.createElement('canvas'), cap = el('figcaption');
+            cap.textContent = 'Page ' + (i + 1) + ' of ' + n; sheet.append(c); fig.append(sheet, cap); body.append(fig); canvases.push(c); sheets.push(sheet);
+            if (ocr && ocr[i]) { // what OCR read on this page, to check against the scan
+              const det = el('details', 'pv-ocrtext'); det.open = true;
+              const sum = el('summary'); sum.textContent = 'Recognised text, page ' + (i + 1);
+              const pre = el('pre'); pre.textContent = ocr[i].text || '(no text recognised on this page)';
+              det.append(sum, pre); body.append(det);
+            }
           }
           if (n > shown) body.append(el('p', 'note', 'Showing the first ' + shown + ' of ' + n + ' pages.'));
-          for (let i = 0; i < shown; i++) { if (token !== pv.token) return; await renderPage(doc, i, canvases[i], 1500); }
+          for (let i = 0; i < shown; i++) {
+            if (token !== pv.token) return;
+            const v1 = await renderPage(doc, i, canvases[i], 1500);
+            if (!ocr || !ocr[i]) continue;
+            const r = ocr[i], W = v1.width * r.scale, H = v1.height * r.scale;
+            for (const w of r.words) {
+              if (!(w.text || '').trim() || w.confidence < 30) continue;
+              const b = w.bbox, box = el('div', 'pv-word' + (w.confidence < 70 ? ' low' : ''));
+              box.title = w.text + ' (' + Math.round(w.confidence) + '% sure)';
+              Object.assign(box.style, { left: (b.x0 / W) * 100 + '%', top: (b.y0 / H) * 100 + '%', width: ((b.x1 - b.x0) / W) * 100 + '%', height: ((b.y1 - b.y0) / H) * 100 + '%' });
+              sheets[i].append(box);
+            }
+          }
         } else if (/^(png|jpe?g|webp)$/.test(ext)) {
           const u = URL.createObjectURL(blob); pv.urls.push(u);
           const im = new Image(); im.src = u; im.alt = 'Preview of ' + filename; im.className = 'pv-img'; body.append(im);
@@ -1266,6 +1335,7 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
   $('#pvBack').addEventListener('click', () => pvClose(false));
   $('#pvX').addEventListener('click', () => pvClose(false));
   $('#pvDownload').addEventListener('click', () => pvClose(true));
+  $('#pvWords').addEventListener('change', (e) => $('#pvBody').classList.toggle('hide-words', !e.target.checked));
   $('#pvDlg').addEventListener('cancel', (e) => { e.preventDefault(); pvClose(false); });
 
   async function zipAndSave(entries, filename) {
@@ -1542,6 +1612,8 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
       '<div class="ctrls"><button type="button" aria-label="Move earlier">&#x2190;</button><button type="button" aria-label="Move later">&#x2192;</button><span class="spacer"></span><button type="button" aria-label="Remove">&#x2715;</button></div>');
     c.draggable = true;
     const th = c.querySelector('.thumb');
+    const z = el('button', 'zoom', ZOOM_ICON); z.type = 'button'; z.title = 'View larger'; z.setAttribute('aria-label', 'View ' + it.file.name + ' larger');
+    z.addEventListener('click', () => viewFileCard(it)); th.addEventListener('dblclick', () => viewFileCard(it)); c.append(z);
     if (it.thumb) { const im = new Image(); im.alt = ''; im.src = it.thumb; th.append(im); }
     else th.append(el('span', 'sk', it.error ? 'Cannot read file' : 'Loading'));
     c.querySelector('.name').textContent = it.file.name; c.querySelector('.name').title = it.file.name;
@@ -1611,8 +1683,12 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
     if (actionsOnly) return;
     const grid = el('div', 'pagegrid');
     for (let i = 0; i < n; i++) {
-      const b = el('button', 'pg', '<div class="thumb"><img alt=""></div><span class="num">' + (i + 1) + '</span><span class="tick" aria-hidden="true">&#x2713;</span>');
-      b.type = 'button'; b.dataset.i = i; b.setAttribute('aria-label', 'Page ' + (i + 1)); b.setAttribute('aria-pressed', set.has(i) ? 'true' : 'false');
+      const b = el('div', 'pg', '<div class="thumb"><img alt=""></div><span class="num">' + (i + 1) + '</span><span class="tick" aria-hidden="true">&#x2713;</span><button type="button" class="zoom" aria-label="View page ' + (i + 1) + ' larger" title="View larger">' + ZOOM_ICON + '</button>');
+      b.tabIndex = 0; b.setAttribute('role', 'button'); b.dataset.i = i; b.setAttribute('aria-label', 'Select page ' + (i + 1)); b.setAttribute('aria-pressed', set.has(i) ? 'true' : 'false');
+      const viewBig = () => viewDocPages(doc, i, '', { has: (k) => set.has(k), toggle: (k) => { set.has(k) ? set.delete(k) : set.add(k); ws.last = k; syncPages(); } });
+      b.querySelector('.zoom').addEventListener('click', (e) => { e.stopPropagation(); viewBig(); });
+      b.addEventListener('dblclick', (e) => { e.preventDefault(); viewBig(); });
+      b.addEventListener('keydown', (e) => { if (e.target === b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); b.click(); } });
       b.addEventListener('click', (e) => {
         if (e.shiftKey && ws.last !== null) { for (let k = Math.min(ws.last, i); k <= Math.max(ws.last, i); k++) set.add(k); }
         else set.has(i) ? set.delete(i) : set.add(i);
@@ -1750,7 +1826,8 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
         catch { ta.focus(); ta.select(); toast('Press Ctrl/Cmd+C to copy the selected text.'); }
       }));
       row.append(btn('Download .txt', '', () => saveFile(new Blob([o.text], { type: 'text/plain' }), baseName() + '.txt')));
-      if (o.result) row.append(btn('Edit this text in Sign', 'ghost', async () => {
+      if (o.result) row.append(btn('Preview and download searchable PDF', 'primary', () => saveFile(new Blob([o.result], { type: 'application/pdf' }), baseName() + '-searchable.pdf', { ocr: o.pages })));
+      if (o.result) row.append(btn('Edit this text', 'ghost', async () => {
         const bytes = o.result; await openPdf(bytes, baseName() + '-searchable.pdf'); setView('sign'); setEditing(true);
       }));
       panel.append(ta, row);
@@ -1803,9 +1880,62 @@ dialog.pv[open] { display: grid; grid-template-rows: auto 1fr auto; }
         }
       });
       ws.ocr.result = await pdf.save();
-      await saveFile(new Blob([ws.ocr.result], { type: 'application/pdf' }), baseName() + '-searchable.pdf');
+      ws.ocr.pages = pages;
+      await saveFile(new Blob([ws.ocr.result], { type: 'application/pdf' }), baseName() + '-searchable.pdf', { ocr: pages });
     }
     renderView();
+  }
+
+  /* ---------- big page viewer ---------- */
+  const lb = { src: null, i: 0, token: 0 };
+  const ZOOM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2M11 8.5v5M8.5 11h5"/></svg>';
+  function openLightbox(src, i) {
+    if (lb.src && lb.src.onClose) lb.src.onClose();
+    lb.src = src; const d = $('#lbDlg'); if (!d.open) d.showModal(); lbShow(i);
+  }
+  function lbSyncSelect() {
+    const b = $('#lbSelect'), s = lb.src && lb.src.selectable; b.hidden = !s; if (!s) return;
+    const on = s.has(lb.i); b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = on ? 'Selected' : 'Select this page';
+  }
+  async function lbShow(i) {
+    const src = lb.src; if (!src) return;
+    lb.i = (i + src.count) % src.count; const t = ++lb.token;
+    $('#lbTitle').textContent = src.label(lb.i);
+    $('#lbPrev').hidden = $('#lbNext').hidden = src.count < 2;
+    lbSyncSelect();
+    const stage = $('#lbStage'); stage.classList.add('loading');
+    const c = document.createElement('canvas'); c.className = 'lb-canvas';
+    try { await src.render(lb.i, c); } catch (e) { console.error(e); }
+    if (t !== lb.token) return;
+    stage.querySelector('.lb-canvas')?.remove(); stage.append(c); stage.classList.remove('loading');
+  }
+  function closeLightbox() {
+    const d = $('#lbDlg'); if (d.open) d.close();
+    lb.token++; if (lb.src && lb.src.onClose) lb.src.onClose(); lb.src = null;
+    $('#lbStage').querySelector('.lb-canvas')?.remove();
+  }
+  $('#lbPrev').addEventListener('click', () => lbShow(lb.i - 1));
+  $('#lbNext').addEventListener('click', () => lbShow(lb.i + 1));
+  $('#lbClose').addEventListener('click', closeLightbox);
+  $('#lbDlg').addEventListener('cancel', (e) => { e.preventDefault(); closeLightbox(); });
+  $('#lbDlg').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); lbShow(lb.i - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); lbShow(lb.i + 1); }
+  });
+  $('#lbSelect').addEventListener('click', () => { const s = lb.src && lb.src.selectable; if (s) { s.toggle(lb.i); lbSyncSelect(); } });
+  const bigW = () => Math.min(2400, Math.round(window.innerWidth * (window.devicePixelRatio || 1)));
+  function viewDocPages(doc, start, name, selectable) {
+    openLightbox({ count: doc.numPages, label: (i) => (name ? name + ', ' : '') + 'page ' + (i + 1) + ' of ' + doc.numPages, render: (i, c) => renderPage(doc, i, c, bigW()), selectable }, start);
+  }
+  async function viewFileCard(it) {
+    if (view === 'merge') {
+      const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await it.file.arrayBuffer()) }).promise;
+      viewDocPages(doc, 0, it.file.name); lb.src.onClose = () => doc.destroy();
+    } else {
+      openLightbox({ count: 1, label: () => it.file.name, render: async (i, c) => {
+        const bmp = await createImageBitmap(it.file); c.width = bmp.width; c.height = bmp.height; c.getContext('2d').drawImage(bmp, 0, 0);
+      } }, 0);
+    }
   }
 
   // Dropping files anywhere on a tool screen

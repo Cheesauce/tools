@@ -67,6 +67,8 @@ Check with the platform team before enabling Pages if your organization's policy
 - Supported: Chrome, Edge, Safari and Firefox (current versions), desktop and mobile.
 - Password-protected PDFs can't be opened. Remove the password first.
 - **Preview before download**: every tool shows the finished file first (all pages, the images, the files inside a zip, or the text) with **Back to editing** and **Download** buttons. Nothing is saved until you choose Download.
+- **Big page viewer**: in Merge, Split, Images to PDF and PDF to images, click the magnifier on a card (or double-click it) to see pages full screen, flip with the arrow keys, and select pages from there.
+- **OCR preview** highlights every recognised word (orange where the engine was unsure) and lists the recognised text under each page.
 - **Search** (top bar, or Ctrl/Cmd+K) finds any tool by name, for example "jpg" or "combine", and finds text in the open PDF with highlighted matches. Scanned pages need OCR before their text can be found.
 - **Formatting bar**: select any text, date or edited text to change its font (original, Helvetica, Times or Courier), size in points, bold, italic and colour, or to duplicate or delete it. **Hide tools / Show tools** collapses the left panel.
 - **Checkbox** and **Fill-in field** are saved as real PDF form fields, so the downloaded file can be filled in with Acrobat, Preview or a browser.
