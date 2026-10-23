@@ -1,6 +1,6 @@
-# Countersign
+# Papeles
 
-A browser-only PDF signing tool.
+Browser-only PDF tools: sign, merge, split, and convert between images and PDF.
 
 Open a PDF, add a signature, initials, date or text, and download the signed copy. Signatures can be drawn, typed in a handwriting font, or uploaded as an image with automatic background removal. Saved signatures are kept in the browser for next time.
 
@@ -13,7 +13,7 @@ Everything runs on the user's own device. PDFs and signatures are never uploaded
 | Path | What it is |
 | --- | --- |
 | `index.html` | The whole app: markup, styles and script |
-| `assets/favicon.svg`, `assets/favicon.png` | Browser tab icon (the Countersign mark) |
+| `assets/favicon.svg`, `assets/favicon.png` | Browser tab icon (the Papeles mark) |
 | `assets/apple-touch-icon.png` | Home-screen icon |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
 
@@ -50,7 +50,7 @@ Then go to http://localhost:8000.
 ```bash
 git init
 git add .
-git commit -m "Add Countersign PDF signer"
+git commit -m "Add Papeles PDF tools"
 git branch -M main
 git remote add origin https://github.com/<user>/<repository>.git
 git push -u origin main
